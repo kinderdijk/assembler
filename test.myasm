@@ -1,0 +1,6 @@
+.directive 12
+
+LDA $14
+ADD $12
+OUT
+HLT
