@@ -6,6 +6,15 @@ use std::io::prelude::*;
 use std::io::{BufReader, Result, BufRead};
 use std::collections::HashMap;
 
+/////////////////////////////////////////////////////////
+/// 
+/// Things to do:
+///   - Add labels and the function to work on that.
+///   - Different addressing modes. 
+/// 
+//////////////////////////////////////////////////////////
+
+
 const LDA: u8 = 0b00000001;
 const STA: u8 = 0b00000010;
 const ADD: u8 = 0b00000011;
@@ -40,12 +49,13 @@ fn main() -> Result<()> {
         } else {
             // Deal with the other instructions here.
             decode_instruction(&line, &instructions, &mut binary_instructions);
-            println!("binary: {:?}", binary_instructions);
-
-            let mut out_file = File::create("out.myobj")?;
-            out_file.write_all(&binary_instructions)?;
         }
     }
+    binary_instructions.push(0b11111111);
+    println!("binary: {:?}", binary_instructions);
+    println!("Writing file....");
+    let mut out_file = File::create("out.myobj")?;
+    out_file.write_all(&binary_instructions)?;
 
     Ok(())
 }
