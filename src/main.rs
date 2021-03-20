@@ -1,10 +1,10 @@
-use std::env;
 use std::path::Path;
 use std::ffi::OsStr;
 use std::fs::File;
 use std::io::prelude::*;
 use std::io::{BufReader, Result, BufRead};
-use std::collections::HashMap;
+use phf::phf_map;
+use clap::{Arg, App};
 
 /////////////////////////////////////////////////////////
 /// 
@@ -15,25 +15,38 @@ use std::collections::HashMap;
 //////////////////////////////////////////////////////////
 
 
-const LDA: u8 = 0b00000001;
-const STA: u8 = 0b00000010;
-const ADD: u8 = 0b00000011;
-const LDI: u8 = 0b00000100;
-const OUT: u8 = 0b00000101;
-const HLT: u8 = 0b00011111;
+static INSTRUCTIONS: phf::Map<&'static str, u8> = phf_map! {
+    "LDA" => 0b00000001,
+    "STA" => 0b00000010,
+    "ADD" => 0b00000011,
+    "LDI" => 0b00000100,
+    "OUT" => 0b00000101,
+    "HLT" => 0b00011111,
+};
 
 fn main() -> Result<()> {
-    let instructions: HashMap<&str, u8> = [
-        ("LDA", LDA),
-        ("STA", STA),
-        ("ADD", ADD),
-        ("LDI", LDI),
-        ("OUT", OUT),
-        ("HLT", HLT)
-    ].iter().cloned().collect();
-    let args: Vec<String> = env::args().collect();
+    let arg_matches = App::new("Custom 8-bit Computer Assembler")
+                            .version("0.2.0")
+                            .author("Jon Pendlebury")
+                            .about("Assembles a custom script to be run on a custom 8-bit computer")
+                            .arg(Arg::with_name("ASM_FILE")
+                                    .help("The name of the assembly file. Must be 'myasm' extension")
+                                    .required(true))
+                            .arg(Arg::with_name("v")
+                                    .short("v")
+                                    .multiple(true)
+                                    .help("Sets the verbosity of the output."))
+                            .get_matches();
 
-    let filename = &args[1];
+
+    let filename = arg_matches.value_of("ASM_FILE").unwrap();
+    let verbosity = match arg_matches.occurrences_of("v") {
+        0 => "info",
+        1 => "debug",
+        2 => "trace",
+        3 | _ => "trace"
+    };
+
     println!("{:?}", filename);
 
     if !valid_file(filename) {
@@ -48,12 +61,15 @@ fn main() -> Result<()> {
             println!("Line that starts with period. {:?}", line);
         } else {
             // Deal with the other instructions here.
-            decode_instruction(&line, &instructions, &mut binary_instructions);
+            decode_instruction(&line, &mut binary_instructions);
         }
     }
     binary_instructions.push(0b11111111);
-    println!("binary: {:?}", binary_instructions);
-    println!("Writing file....");
+    if verbosity == "debug" {
+        println!("binary: {:?}", binary_instructions);
+        println!("Writing file....");
+    }
+
     let mut out_file = File::create("out.myobj")?;
     out_file.write_all(&binary_instructions)?;
 
@@ -86,15 +102,15 @@ fn read_lines_from_file(filename: &str) -> Result<Vec<String>> {
     Ok(lines)
 }
 
-fn decode_instruction(instruction_line: &str, instructions: &HashMap<&str, u8>, binary_instructions: &mut Vec<u8>) {
+fn decode_instruction(instruction_line: &str, binary_instructions: &mut Vec<u8>) {
     // Find the instructions and replace them with the opcode. 
     // Throw an error if there is an unrecognized instruction.
 
     if !instruction_line.is_empty() {
         let instruction = &instruction_line[..3];
-        match instructions.get(instruction) {
+        match INSTRUCTIONS.get(instruction) {
             Some(code) => binary_instructions.push(*code),
-            None => println!("Instruction not valid. {:?}", instruction)
+            None => panic!("Invalid instruction: {} is not defined.", instruction)
         }
 
         if instruction_line.contains("$") {
