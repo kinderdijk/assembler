@@ -4,7 +4,7 @@ use std::fs::File;
 use std::io::prelude::*;
 use std::io::{BufReader, Result, BufRead};
 use phf::phf_map;
-use clap::{Arg, App};
+use clap::{Arg, App, crate_version};
 
 /////////////////////////////////////////////////////////
 /// 
@@ -26,7 +26,7 @@ static INSTRUCTIONS: phf::Map<&'static str, u8> = phf_map! {
 
 fn main() -> Result<()> {
     let arg_matches = App::new("Custom 8-bit Computer Assembler")
-                            .version("0.2.0")
+                            .version(crate_version!())
                             .author("Jon Pendlebury")
                             .about("Assembles a custom script to be run on a custom 8-bit computer")
                             .arg(Arg::with_name("ASM_FILE")
