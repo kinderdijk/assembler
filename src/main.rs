@@ -12,7 +12,8 @@ use log::{LevelFilter, trace, debug, info, warn};
 /// 
 /// Things to do:
 ///   - Add labels and the function to work on that.
-///   - Different addressing modes. 
+///   - Different addressing modes.
+///   - Add define directlive.
 /// 
 //////////////////////////////////////////////////////////
 
@@ -27,6 +28,7 @@ static INSTRUCTIONS: phf::Map<&'static str, u8> = phf_map! {
 };
 
 fn main() -> Result<()> {
+    // Setting up the arguments for the program.
     let arg_matches = App::new("Custom 8-bit Computer Assembler")
                             .version(crate_version!())
                             .author("Jon Pendlebury")
@@ -38,24 +40,34 @@ fn main() -> Result<()> {
                                     .short("v")
                                     .multiple(true)
                                     .help("Sets the verbosity of the output."))
+                            .arg(Arg::with_name("o")
+                                    .short("o")
+                                    .help("Set the name of the output files. If nothing is specified the default filename will be 'out'")
+                                    .takes_value(true))
                             .get_matches();
 
 
-    let filename = arg_matches.value_of("ASM_FILE").unwrap();
+    // Get the arument values and set them accordingly.
+    let prog_filename = arg_matches.value_of("ASM_FILE").unwrap();
+    let out_filename = match arg_matches.value_of("o") {
+        Some(value) => value,
+        None => "out"
+    };
     let verbosity = match arg_matches.occurrences_of("v") {
         0 => LevelFilter::Info,
         1 => LevelFilter::Debug,
         2 | _ => LevelFilter::Trace,
     };
-    Builder::new().filter_level(verbosity).init();
+    Builder::new().filter_level(verbosity).init();let output_filename = format!("{}{}", out_filename, ".myobj");
 
-    debug!("{:?}", filename);
+    debug!("Input filename: {:?}", prog_filename);
+    debug!("Output filename: {:?}", output_filename);
 
-    if !valid_file(filename) {
-        panic!("File is not valid. filename={}", filename);
+    if !valid_file(prog_filename) {
+        panic!("File is not valid. filename={}", prog_filename);
     }
 
-    let file_lines = read_lines_from_file(filename).unwrap();
+    let file_lines = read_lines_from_file(prog_filename).unwrap();
     let mut binary_instructions = Vec::<u8>::new();
     for line in file_lines {
         if line.starts_with(".") {
@@ -70,7 +82,7 @@ fn main() -> Result<()> {
     trace!("Binary values: {:?}", binary_instructions);
     debug!("Writing file.....");
 
-    let mut out_file = File::create("out.myobj")?;
+    let mut out_file = File::create(output_filename)?;
     out_file.write_all(&binary_instructions)?;
 
     Ok(())
