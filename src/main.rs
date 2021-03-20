@@ -5,6 +5,8 @@ use std::io::prelude::*;
 use std::io::{BufReader, Result, BufRead};
 use phf::phf_map;
 use clap::{Arg, App, crate_version};
+use env_logger::Builder;
+use log::{LevelFilter, trace, debug, info, warn};
 
 /////////////////////////////////////////////////////////
 /// 
@@ -41,13 +43,13 @@ fn main() -> Result<()> {
 
     let filename = arg_matches.value_of("ASM_FILE").unwrap();
     let verbosity = match arg_matches.occurrences_of("v") {
-        0 => "info",
-        1 => "debug",
-        2 => "trace",
-        3 | _ => "trace"
+        0 => LevelFilter::Info,
+        1 => LevelFilter::Debug,
+        2 | _ => LevelFilter::Trace,
     };
+    Builder::new().filter_level(verbosity).init();
 
-    println!("{:?}", filename);
+    debug!("{:?}", filename);
 
     if !valid_file(filename) {
         panic!("File is not valid. filename={}", filename);
@@ -58,17 +60,15 @@ fn main() -> Result<()> {
     for line in file_lines {
         if line.starts_with(".") {
             // Deal with the directive commands in here.
-            println!("Line that starts with period. {:?}", line);
+            info!("Line that starts with period. {:?}", line);
         } else {
             // Deal with the other instructions here.
             decode_instruction(&line, &mut binary_instructions);
         }
     }
     binary_instructions.push(0b11111111);
-    if verbosity == "debug" {
-        println!("binary: {:?}", binary_instructions);
-        println!("Writing file....");
-    }
+    trace!("Binary values: {:?}", binary_instructions);
+    debug!("Writing file.....");
 
     let mut out_file = File::create("out.myobj")?;
     out_file.write_all(&binary_instructions)?;
@@ -77,17 +77,16 @@ fn main() -> Result<()> {
 }
 
 fn valid_file(filename: &str) -> bool {
-    let mut valid: bool = true;
     let extension = Path::new(filename).extension()
             .and_then(OsStr::to_str)
             .expect("No extension was found.");
 
     if extension != "myasm" {
-        valid = false;
-        return valid;
+        warn!("Invalid file extension: {}", extension);
+        panic!("File was not valid.")
     }
 
-    return valid;
+    return true;
 }
 
 fn read_lines_from_file(filename: &str) -> Result<Vec<String>> {
@@ -117,7 +116,7 @@ fn decode_instruction(instruction_line: &str, binary_instructions: &mut Vec<u8>)
             let memory = &instruction_line[5..];
             let memory: u8 = memory.parse().unwrap();
             binary_instructions.push(memory);
-            println!("Memory location: {:?}", memory);
+            trace!("Memory location: {:?}", memory);
         } else {
             let memory = 0b00000000;
             binary_instructions.push(memory);

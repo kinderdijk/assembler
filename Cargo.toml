@@ -1,6 +1,6 @@
 [package]
 name = "assembler"
-version = "0.2.1"
+version = "0.3.0"
 authors = ["Jonathon Pendleury <jonathon.pendlebury@gmail.com>"]
 edition = "2018"
 
@@ -9,3 +9,5 @@ edition = "2018"
 [dependencies]
 phf = { version = "0.8", features = ["macros"] }
 clap = "2.33.3"
+env_logger = "0.8.3"
+log = "0.4.14"
