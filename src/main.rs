@@ -58,7 +58,8 @@ fn main() -> Result<()> {
         1 => LevelFilter::Debug,
         2 | _ => LevelFilter::Trace,
     };
-    Builder::new().filter_level(verbosity).init();let output_filename = format!("{}{}", out_filename, ".myobj");
+    Builder::new().filter_level(verbosity).init();
+    let output_filename = format!("{}{}", out_filename, ".myobj");
 
     debug!("Input filename: {:?}", prog_filename);
     debug!("Output filename: {:?}", output_filename);
