@@ -6,7 +6,7 @@ use std::io::{BufReader, Result, BufRead};
 use phf::phf_map;
 use clap::{Arg, App, crate_version};
 use env_logger::Builder;
-use log::{LevelFilter, trace, debug, info, warn};
+use log::{LevelFilter, trace, debug, info};
 
 /////////////////////////////////////////////////////////
 /// 
@@ -16,6 +16,13 @@ use log::{LevelFilter, trace, debug, info, warn};
 ///   - Add define directlive.
 /// 
 //////////////////////////////////////////////////////////
+
+
+struct Instruction {
+    instruction: String,
+    operand: u8,
+    _is_address: bool
+}
 
 
 static INSTRUCTIONS: phf::Map<&'static str, u8> = phf_map! {
@@ -95,8 +102,7 @@ fn valid_file(filename: &str) -> bool {
             .expect("No extension was found.");
 
     if extension != "myasm" {
-        warn!("Invalid file extension: {}", extension);
-        panic!("File was not valid.")
+        panic!("Invalid file extension. {:?}", extension)
     }
 
     return true;
@@ -119,20 +125,54 @@ fn decode_instruction(instruction_line: &str, binary_instructions: &mut Vec<u8>)
     // Throw an error if there is an unrecognized instruction.
 
     if !instruction_line.is_empty() {
-        let instruction = &instruction_line[..3];
+        let parsed_instruction = match parse_instruction_line(instruction_line) {
+            Ok(value) => value,
+            _ => panic!("There was an error parsing the instruction line. {:?}", instruction_line)
+        };
+
+        debug!("Instruction: {:?}, operand: {:?}", parsed_instruction.instruction, parsed_instruction.operand);
+        let instruction = parsed_instruction.instruction.as_str();
+
         match INSTRUCTIONS.get(instruction) {
             Some(code) => binary_instructions.push(*code),
             None => panic!("Invalid instruction: {} is not defined.", instruction)
         }
 
-        if instruction_line.contains("$") {
-            let memory = &instruction_line[5..];
-            let memory: u8 = memory.parse().unwrap();
-            binary_instructions.push(memory);
-            trace!("Memory location: {:?}", memory);
-        } else {
-            let memory = 0b00000000;
-            binary_instructions.push(memory);
-        }
+        trace!("Adding operand to the instruction set. {:?}", parsed_instruction.operand);
+        binary_instructions.push(parsed_instruction.operand)
+    }
+}
+
+fn parse_instruction_line(instruction_line: &str) -> Result<Instruction> {
+    let instruction = get_instruction_part(instruction_line);
+    trace!("Got the instruction part of the line. {:?}", instruction);
+
+    let operand = get_operand_part(instruction_line).parse().unwrap();
+    trace!("Got the operand part of the line. {:?}", operand);
+
+    let _is_address: bool;
+    if instruction_line.contains("#") {
+        _is_address = false;
+    } else {
+        _is_address = true;
+    }
+
+    Ok(Instruction{ instruction, operand, _is_address })
+}
+
+fn get_instruction_part(instruction_line: &str) -> String {
+    let trimmed_instruction_string = instruction_line.trim_start();
+    let uppercase_instruction = trimmed_instruction_string.to_uppercase();
+
+    match uppercase_instruction.find(" ") {
+        Some(value) => uppercase_instruction[..value].to_string(),
+        None => uppercase_instruction.to_string()
+    }
+}
+
+fn get_operand_part(instruction_line: &str) -> String {
+    match instruction_line.find("$") {
+        Some(value) => instruction_line[value+1..].to_string(),
+        None => "0".to_string()
     }
 }
