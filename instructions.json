@@ -1,0 +1,35 @@
+{
+	"instructions": {
+		"LDA":  {
+			"opCode": 1,
+			"addressableOpCode": 2
+		},
+		"LDC":  {
+			"opCode": 3,
+			"addressableOpCode": 4
+		},
+		"LDD": {
+			"opCode": 5,
+			"addressableOpCode": 6
+		},
+		"STA":  {
+			"opCode": 7
+		},
+		"STC":  {
+			"opCode": 8
+		},
+		"STD":  {
+			"opCode": 9
+		},
+		"OUT":  {
+			"opCode": 10
+		},
+		"ADD": {
+			"opCode": 11,
+			"addressableOpCode": 12
+		},
+		"HLT":  {
+			"opCode": 127
+		}
+	}
+}
