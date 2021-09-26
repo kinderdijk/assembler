@@ -2,7 +2,6 @@ use log::{trace, debug, info};
 use serde::Deserialize;
 use serde_json;
 use std::collections::HashMap;
-use std::error::Error;
 use std::fs::File;
 use std::io::BufReader;
 
@@ -25,11 +24,11 @@ struct InstructionAddress {
 }
 
 impl InstructionSet {
-    pub fn new() -> Result<InstructionSet, Box<Error>> {
-        let file = File::open("./instructions.json")?;
+    pub fn new() -> Result<InstructionSet, ()> {
+        let file = File::open("./instructions.json").unwrap();
         let reader = BufReader::new(file);
 
-        let set = serde_json::from_reader(reader)?;
+        let set = serde_json::from_reader(reader).unwrap();
 
         trace!("Read the file to json. {:?}", set);
         Ok(set)

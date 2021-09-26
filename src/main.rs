@@ -3,10 +3,8 @@ use std::ffi::OsStr;
 use std::fs::File;
 use std::io::prelude::*;
 use std::io::{BufReader, Result, BufRead};
-use phf::phf_map;
 use clap::{Arg, App, crate_version};
 use env_logger::Builder;
-use lazy_static::lazy_static;
 use log::{LevelFilter, trace, debug, info};
 
 mod instruction;
@@ -15,24 +13,10 @@ mod instruction;
 /// 
 /// Things to do:
 ///   - Add labels and the function to work on that.
-///   - Different addressing modes.
 ///   - Add define directlive.
 /// 
 //////////////////////////////////////////////////////////
 
-
-// static INSTRUCTIONS: phf::Map<&'static str, u8> = phf_map! {
-//     "LDA" => 0b00000001,
-//     "STA" => 0b00000010,
-//     "ADD" => 0b00000011,
-//     "LDI" => 0b00000100,
-//     "OUT" => 0b00000101,
-//     "HLT" => 0b00011111,
-// };
-
-// lazy_static!{
-//     static ref SET: instruction::InstructionSet = instruction::InstructionSet::new().unwrap();
-// }
 
 fn main() -> Result<()> {
     // Setting up the arguments for the program.
@@ -125,66 +109,3 @@ fn read_lines_from_file(filename: &str) -> Result<Vec<String>> {
     }
     Ok(lines)
 }
-
-
-
-// fn decode_instruction(instruction_line: &str, binary_instructions: &mut Vec<u8>) {
-//     // Find the instructions and replace them with the opcode. 
-//     // Throw an error if there is an unrecognized instruction.
-
-//     if !instruction_line.is_empty() {
-//         let parsed_instruction = match parse_instruction_line(instruction_line) {
-//             Ok(value) => value,
-//             _ => panic!("There was an error parsing the instruction line. {:?}", instruction_line)
-//         };
-
-//         debug!("Instruction: {:?}, operand: {:?}", parsed_instruction.instruction, parsed_instruction.operand);
-//         let instruction = parsed_instruction.instruction.as_str();
-
-//         match INSTRUCTIONS.get(instruction) {
-//             Some(code) => binary_instructions.push(*code),
-//             None => panic!("Invalid instruction: {} is not defined.", instruction)
-//         }
-
-//         trace!("Adding operand to the instruction set. {:?}", parsed_instruction.operand);
-//         binary_instructions.push(parsed_instruction.operand)
-//     }
-// }
-
-// fn parse_instruction_line(instruction_line: &str) -> Result<instruction::Instruction> {
-//     let instruction = get_instruction_part(instruction_line);
-//     trace!("Got the instruction part of the line. {:?}", instruction);
-
-//     let operand = get_operand_part(instruction_line).parse().unwrap();
-//     trace!("Got the operand part of the line. {:?}", operand);
-
-//     let _is_address: bool;
-//     if instruction_line.contains("#") {
-//         _is_address = false;
-//     } else if instruction_line.contains("$") {
-//         _is_address = true;
-//     } else {
-//         panic!("Invalid character in the operand. Must be contain either # or $, {}", instruction_line);
-//     }
-
-//     Ok(instruction::Instruction{ instruction, operand, _is_address })
-// }
-
-// fn get_instruction_part(instruction_line: &str) -> String {
-//     let trimmed_instruction_string = instruction_line.trim_start().to_uppercase();
-
-//     match trimmed_instruction_string.find(" ") {
-//         Some(value) => trimmed_instruction_string[..value].to_string(),
-//         None => trimmed_instruction_string.to_string()
-//     }
-// }
-
-// fn get_operand_part(instruction_line: &str) -> String {
-//     let trimmed_instruction_string = instruction_line.trim_start().to_uppercase();
-
-//     // TODO: If there are multiple spaces between the instuctions and the operand this will fail.
-//     match instruction_line.find(" ") {
-//         Some(value) => instruction_line[value+2..].to_string(),
-//         None => "0".to_string()
-//     }
-// }
